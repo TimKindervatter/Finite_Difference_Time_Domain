@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 c = 299792458   # Speed of light in m/s
 steps = 200     # Number of iterations
 
-Nres = 1       # Number of points to resolve a wave with
+Nres = 100       # Number of points to resolve a wave with
 dz = 1/Nres
 Nz = 100        # Number of grid points along the z-axis
 
@@ -34,8 +34,9 @@ z = np.linspace(zmin, zmax, Nz)
 
 epsilon_r = np.ones(Nz)
 mu_r = np.ones(Nz)
-nbc = 1  # Refractive index of boundary
+n = np.sqrt(epsilon_r*mu_r)
 
+nbc = 1  # Refractive index of boundary
 dt = nbc*dz/(2*c)
 
 
@@ -47,10 +48,10 @@ tau = 0.5/fmax
 t0 = 5*tau
 g = lambda t: np.exp(-((t - t0)/tau)**2)
 A = np.sqrt(epsilon_r[nzsrc]/mu_r[nzsrc])
-deltat = dt + dt/2
+deltat = n[nzsrc]*dz/(2*c) + dt/2
 
 Eysrc = lambda t: g(t)
-Hxsrc = lambda t: -A*g(T + deltat)
+Hxsrc = lambda t: -A*g(t + deltat)
 
 mEy = (c*dt)/epsilon_r
 mHx = (c*dt)/mu_r
@@ -58,17 +59,14 @@ mHx = (c*dt)/mu_r
 Ey = np.zeros(Nz)
 Hx = np.zeros(Nz)
 
-h3 = 0
 h2 = 0
 h1 = 0
-e3 = 0
 e2 = 0
 e1 = 0
 
 plt.figure(1)
 
 for T in range(steps):
-    # h3 = h2
     h2 = h1
     h1 = Hx[0]
     for nz in range(Nz-1):
@@ -77,7 +75,6 @@ for T in range(steps):
 
     Hx[nzsrc-1] = Hx[nzsrc-1] - (mHx[nzsrc-1]/dz)*Eysrc(T)
 
-    # e3 = e2
     e2 = e1
     e1 = Ey[Nz - 1]
     Ey[0] = Ey[0] + mEy[0]*(Hx[0] - h2)/dz
