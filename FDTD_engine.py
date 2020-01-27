@@ -1,6 +1,7 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 
 # Define problem
 c = 299792458  # Speed of light in m/s
@@ -58,23 +59,22 @@ steps = int(np.ceil(total_runtime/dt))
 
 # Compute source functions for Ey/Hx mode
 t = np.arange(0, steps)*dt
-# g = lambda t: 
 A = np.sqrt(epsilon_r[nzsrc]/mu_r[nzsrc])
 deltat = n[nzsrc]*dz/(2*c) + dt/2
 
 Eysrc = np.exp(-((t - t0)/tau)**2)
 Hxsrc = -A*np.exp(-((t - t0 + deltat)/tau)**2)
-# plt.plot(t, Eysrc)
-# plt.plot(t, Hxsrc)
-# plt.show()
 
+# Set up grid
 zmin = 0
 zmax = Nz*dz
 z = np.linspace(zmin, zmax, Nz)
 
+# Initialize update coeffients
 mEy = (c*dt)/epsilon_r
 mHx = (c*dt)/mu_r
 
+# Initialize field values
 Ey = np.zeros(Nz)
 Hx = np.zeros(Nz)
 
@@ -83,37 +83,79 @@ h1 = 0
 e2 = 0
 e1 = 0
 
-plt.figure(1)
+# Initialize Fourier Transforms
+Nfreq = 100
+freq = np.linspace(0, fmax, Nfreq)
+K = np.exp(-1j*2*np.pi*dt*freq)
+
+# Initialize Fourier transforms for reflected and transmitted fields
+reflected_fourier = np.zeros(Nfreq, dtype=complex)
+transmitted_fourier = np.zeros(Nfreq, dtype=complex)
+source_fourier = np.zeros(Nfreq, dtype=complex)
+
+# Initialize plot
+fig, ax = plt.subplots(nrows=2, ncols=1)
+
+device_width = z[device_end_index] - z[device_start_index]
+rectangle = Rectangle((z[device_start_index], -1.5), device_width, 3, facecolor='grey')
 
 for T in range(steps):
+    # Record H at boundary
     h2 = h1
     h1 = Hx[0]
+    
+    # Update H from E
     for nz in range(Nz-1):
         Hx[nz] = Hx[nz] + mHx[nz]*(Ey[nz + 1] - Ey[nz])/dz
     Hx[Nz-1] = Hx[Nz - 1] + mHx[Nz-1]*(e2 - Ey[Nz - 1])/dz
 
+    # Handle H-field source
     Hx[nzsrc-1] = Hx[nzsrc-1] - (mHx[nzsrc-1]/dz)*Eysrc[T]
 
+    # Record E at boundary
     e2 = e1
     e1 = Ey[Nz - 1]
+
+    # Update E from H
     Ey[0] = Ey[0] + mEy[0]*(Hx[0] - h2)/dz
     for nz in range(1, Nz):
         Ey[nz] = Ey[nz] + mEy[nz]*(Hx[nz] - Hx[nz - 1])/dz
 
+    # Handle E-field source
     Ey[nzsrc] = Ey[nzsrc] - (mEy[nzsrc]/dz)*Hxsrc[T]
     # Ey[nzsrc] = Ey[nzsrc] + g(T)
 
+    # Update Fourier transforms
+    for f in range(Nfreq):
+        reflected_fourier[f] = reflected_fourier[f] + (K[f]**T)*Ey[0]
+        transmitted_fourier[f] = transmitted_fourier[f] + (K[f]**T)*Ey[Nz - 1]
+        source_fourier[f] = source_fourier[f] + (K[f]**T)*Eysrc[T]
+
+    reflectance = np.abs(reflected_fourier/source_fourier)**2
+    transmittance = np.abs(transmitted_fourier/source_fourier)**2
+    conservation_of_energy = reflectance + transmittance
+
+    # Visualize fields
     if (T % 10 == 0):
-        plt.plot(z, Ey)
-        plt.plot(z, Hx)
-        axes = plt.gca()
-        axes.set_xlim([zmin, zmax])
-        axes.set_ylim([-1.1, 1.1])
+        ax[0].add_patch(rectangle)
+        ax[0].plot(z, Ey)
+        ax[0].plot(z, Hx)
+        ax[0].set_xlim([zmin, zmax])
+        ax[0].set_ylim([-1.5, 1.5])
+
+        ax[1].plot(freq, reflectance)
+        ax[1].plot(freq, transmittance)
+        ax[1].plot(freq, conservation_of_energy)
+        ax[1].set_xlim([0, fmax])
+        ax[1].set_ylim([0, 1.5])
+
         plt.pause(1/60)
-        plt.cla()
+        ax[0].cla()
+        ax[1].cla()
 
-
-# %%
+reflected_fourier = reflected_fourier*dt
+transmitted_fourier = transmitted_fourier*dt
+source_fourier = source_fourier*dt
 
 
 # %%
