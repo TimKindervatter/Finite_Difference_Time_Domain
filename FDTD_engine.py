@@ -2,56 +2,72 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-c = 299792458   # Speed of light in m/s
-steps = 200     # Number of iterations
+# Define problem
+c = 299792458  # Speed of light in m/s
+fmax = 1e9  # Hz
+d = 0.3048  # Device width in meters
+device_permittivity = 1.0 #6.0
+device_permeability = 1.0 #2.0
 
-Nres = 100       # Number of points to resolve a wave with
-dz = 1/Nres
-Nz = 100        # Number of grid points along the z-axis
+# Wavelength resolution
+N_lambda = 20  # Number of points to resolve a wave with
+nmax = np.sqrt(device_permittivity*device_permeability)
+lambda_min = c/(fmax*nmax)
+delta_lambda = lambda_min/N_lambda
 
+# Structure resolution
+N_d = 4  # Number of points to resolve device geometry witih
+delta_d = d/N_d
 
-dmin = 1        # Size of smallest feature in geomtetry
-NDres = 4       # Number of points to resolve a dimension with
+# Grid resolution
+dz_prime = min(delta_lambda, delta_d)
+N_prime = d/dz_prime
+N = int(np.ceil(N_prime))
+dz = d/N
 
-nmax = 1.0      # Maximum refractive index
+# Determine grid size
+spacer_region_size = 10
+Nz = N + 2*spacer_region_size + 3
 
-# _lambda = np.linspace(10, 100, 1000)  # Wavelengths to simulate
+# Determine position of device in grid
+num_reflection_cells = 1
+num_source_cells = 1
+device_start_index = num_reflection_cells + num_source_cells + spacer_region_size
+device_end_index = device_start_index + N - 1
 
-# Compute default grid resolution
-# dz1 = np.min(_lambda)/nmax/Nres
-# dz2 = dmin/NDres
-# dz = min(dz1, dz2)
-
-
-# Snap grid to critical dimensions
-# dc = dz1
-# N = np.ceil(dc/dz)
-# dz = dc/N
-
-zmin = 0
-zmax = Nz*dz
-z = np.linspace(zmin, zmax, Nz)
-
+# Set device material parameters
 epsilon_r = np.ones(Nz)
+epsilon_r[device_start_index:device_end_index + 1] = device_permittivity
 mu_r = np.ones(Nz)
+mu_r[device_start_index:device_end_index + 1] = device_permeability
 n = np.sqrt(epsilon_r*mu_r)
 
-nbc = 1  # Refractive index of boundary
-dt = nbc*dz/(2*c)
+# Compute time step
+n_bc = 1.0
+dt = n_bc*dz/(2*c)
 
-
-#  Pulse parameters
-# _lambda_min = min(_lambda)
-fmax = 0.1
-nzsrc = Nz//2
+# Compute source parameters
+nzsrc = 1
 tau = 0.5/fmax
-t0 = 5*tau
+t0 = 6*tau
+
+# Compute number of time steps
+t_prop = nmax*Nz*dz/c
+total_runtime = 12*tau + 5*t_prop
+steps = int(np.ceil(total_runtime/dt))
+
+# Compute source functions for Ey/Hx mode
+t = np.arange(0, steps)*dt
 g = lambda t: np.exp(-((t - t0)/tau)**2)
 A = np.sqrt(epsilon_r[nzsrc]/mu_r[nzsrc])
 deltat = n[nzsrc]*dz/(2*c) + dt/2
 
 Eysrc = lambda t: g(t)
 Hxsrc = lambda t: -A*g(t + deltat)
+
+zmin = 0
+zmax = Nz*dz
+z = np.linspace(zmin, zmax, Nz)
 
 mEy = (c*dt)/epsilon_r
 mHx = (c*dt)/mu_r
@@ -81,7 +97,6 @@ for T in range(steps):
     for nz in range(1, Nz):
         Ey[nz] = Ey[nz] + mEy[nz]*(Hx[nz] - Hx[nz - 1])/dz
 
-
     Ey[nzsrc] = Ey[nzsrc] - (mEy[nzsrc]/dz)*Hxsrc(T)
     # Ey[nzsrc] = Ey[nzsrc] + g(T)
 
@@ -89,9 +104,12 @@ for T in range(steps):
     plt.plot(z, Hx)
     axes = plt.gca()
     axes.set_xlim([zmin, zmax])
-    axes.set_ylim([-1.1, 1.1])
+    # axes.set_ylim([-1.1, 1.1])
     plt.pause(1/60)
     plt.cla()
+
+
+# %%
 
 
 # %%
