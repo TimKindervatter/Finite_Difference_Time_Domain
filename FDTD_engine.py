@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 c = 299792458  # Speed of light in m/s
 fmax = 1e9  # Hz
 d = 0.3048  # Device width in meters
-device_permittivity = 1.0 #6.0
-device_permeability = 1.0 #2.0
+device_permittivity = 6.0
+device_permeability = 2.0
 
 # Wavelength resolution
 N_lambda = 20  # Number of points to resolve a wave with
@@ -58,12 +58,15 @@ steps = int(np.ceil(total_runtime/dt))
 
 # Compute source functions for Ey/Hx mode
 t = np.arange(0, steps)*dt
-g = lambda t: np.exp(-((t - t0)/tau)**2)
+# g = lambda t: 
 A = np.sqrt(epsilon_r[nzsrc]/mu_r[nzsrc])
 deltat = n[nzsrc]*dz/(2*c) + dt/2
 
-Eysrc = lambda t: g(t)
-Hxsrc = lambda t: -A*g(t + deltat)
+Eysrc = np.exp(-((t - t0)/tau)**2)
+Hxsrc = -A*np.exp(-((t - t0 + deltat)/tau)**2)
+# plt.plot(t, Eysrc)
+# plt.plot(t, Hxsrc)
+# plt.show()
 
 zmin = 0
 zmax = Nz*dz
@@ -89,7 +92,7 @@ for T in range(steps):
         Hx[nz] = Hx[nz] + mHx[nz]*(Ey[nz + 1] - Ey[nz])/dz
     Hx[Nz-1] = Hx[Nz - 1] + mHx[Nz-1]*(e2 - Ey[Nz - 1])/dz
 
-    Hx[nzsrc-1] = Hx[nzsrc-1] - (mHx[nzsrc-1]/dz)*Eysrc(T)
+    Hx[nzsrc-1] = Hx[nzsrc-1] - (mHx[nzsrc-1]/dz)*Eysrc[T]
 
     e2 = e1
     e1 = Ey[Nz - 1]
@@ -97,16 +100,17 @@ for T in range(steps):
     for nz in range(1, Nz):
         Ey[nz] = Ey[nz] + mEy[nz]*(Hx[nz] - Hx[nz - 1])/dz
 
-    Ey[nzsrc] = Ey[nzsrc] - (mEy[nzsrc]/dz)*Hxsrc(T)
+    Ey[nzsrc] = Ey[nzsrc] - (mEy[nzsrc]/dz)*Hxsrc[T]
     # Ey[nzsrc] = Ey[nzsrc] + g(T)
 
-    plt.plot(z, Ey)
-    plt.plot(z, Hx)
-    axes = plt.gca()
-    axes.set_xlim([zmin, zmax])
-    # axes.set_ylim([-1.1, 1.1])
-    plt.pause(1/60)
-    plt.cla()
+    if (T % 10 == 0):
+        plt.plot(z, Ey)
+        plt.plot(z, Hx)
+        axes = plt.gca()
+        axes.set_xlim([zmin, zmax])
+        axes.set_ylim([-1.1, 1.1])
+        plt.pause(1/60)
+        plt.cla()
 
 
 # %%
