@@ -13,17 +13,17 @@ def create_circle(r, x_offset=0, y_offset=0):
     Returns:
         None
     """
-    x = np.linspace(-1,1,1000)
-    y = np.linspace(-1,1,1000)
+    x = np.linspace(-1, 1, 1000)
+    y = np.linspace(-1, 1, 1000)
     
-    [X,Y] = np.meshgrid(x,y)
+    [X, Y] = np.meshgrid(x, y)
     circle = ((X-x_offset)**2 + (Y-y_offset)**2) < r
     
     plt.figure()
-    plt.imshow(circle, origin = 'lower')
+    plt.imshow(circle, origin='lower')
 
 
-def create_ellipse(a, b, x_offset=0, y_offset=0, orientation = 'horizontal'):
+def create_ellipse(a, b, x_offset=0, y_offset=0, orientation='horizontal'):
     """
     Plots an ellipse with semi-major axis a and semi-minor axis b, centered at the point (x_offset, y_offset)
     
@@ -43,23 +43,23 @@ def create_ellipse(a, b, x_offset=0, y_offset=0, orientation = 'horizontal'):
     if b > a:
         a, b = b, a
     
-    x = np.linspace(-1,1,1000)
-    y = np.linspace(-1,1,1000)
+    x = np.linspace(-1, 1, 1000)
+    y = np.linspace(-1, 1, 1000)
     
     if orientation == 'horizontal':
-        #Semi-major axis is in x-direction, giving the impression of a "horizontal" ellipse
+        # Semi-major axis is in x-direction, giving the impression of a "horizontal" ellipse
         rx = a
         ry = b
     if orientation == 'vertical':
-        #Semi-major axis is in y-direction, giving the impression of a "vertical" ellipse
+        # Semi-major axis is in y-direction, giving the impression of a "vertical" ellipse
         rx = b
         ry = a
         
-    [X,Y] = np.meshgrid(x,y)
+    [X, Y] = np.meshgrid(x,y)
     ellipse = (((X-x_offset)/rx)**2 + ((Y-y_offset)/ry)**2) < 1
     
     plt.figure()
-    plt.imshow(ellipse, origin = 'lower')
+    plt.imshow(ellipse, origin='lower')
     
     
 def create_rectangle(width, height):
@@ -73,15 +73,15 @@ def create_rectangle(width, height):
     w = int(width*1000)
     h = int(height*1000)
     
-    grid = np.zeros([1000,1000])
+    grid = np.zeros([1000, 1000])
     
-    x = np.size(grid,1)
-    y = np.size(grid,0)
+    x = np.size(grid, 1)
+    y = np.size(grid, 0)
     
     grid[(y - h)//2:(y + h)//2, (x - w)//2:(x + w)//2] = 1
     
     plt.figure()
-    plt.imshow(grid, origin = 'lower')
+    plt.imshow(grid, origin='lower')
 
     
 def create_formed_half_space(x, y, function, inverted=False):
@@ -97,7 +97,7 @@ def create_formed_half_space(x, y, function, inverted=False):
     Returns:
         None
     """
-    [X,Y] = np.meshgrid(x,y)
+    [X, Y] = np.meshgrid(x, y)
     
     f = function(x)
     half_space = f > Y
@@ -106,7 +106,7 @@ def create_formed_half_space(x, y, function, inverted=False):
         half_space = ~half_space
         
     plt.figure()
-    plt.imshow(half_space, origin = 'lower')
+    plt.imshow(half_space, origin='lower')
     
 
 def line(m, b):
@@ -146,4 +146,4 @@ if __name__ == '__main__':
     b = 7
     function = line(m, b)
     
-    create_formed_half_space(x, y, function, inverted = True)
+    create_formed_half_space(x, y, function, inverted=True)
