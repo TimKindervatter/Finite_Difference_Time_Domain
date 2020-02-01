@@ -3,43 +3,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import generate_grid as grid
+from global_constants import c, max_frequency
 
 def FDTD_engine(plot=False):
     # Define problem
-    c = 299792458  # Speed of light in m/s
-    max_frequency = 1e9  # Hz
-    device_width = 0.3048  # Device width in meters
+    device_width = 0.3048
+    spacer_region_width = 0.3048/7.1
+    layer_widths = [spacer_region_width, device_width, spacer_region_width]  # Layer widths in meters
     layer_permittivities = np.array([1.0, 6.0, 1.0])
     layer_permeabilities = np.array([1.0, 2.0, 1.0])
 
-    def determine_grid_size_and_spacing(device_width, layer_permittivities, layer_permeabilities):
-        # Wavelength resolution
-        wavelength_resolution = 20  # Number of points to resolve a wave with
-        max_index_of_refraction = np.max(np.sqrt(layer_permittivities*layer_permeabilities))
-        lambda_min = c/(max_frequency*max_index_of_refraction)
-        delta_lambda = lambda_min/wavelength_resolution
-
-        # Structure resolution
-        device_resolution = 4  # Number of points to resolve device geometry witih
-        delta_d = device_width/device_resolution
-
-        # Grid resolution
-        grid_step_size_unsnapped = min(delta_lambda, delta_d)
-        grid_size_unsnapped = device_width/grid_step_size_unsnapped
-        device_size = int(np.ceil(grid_size_unsnapped))
-        dz = device_width/device_size
-
-        return (device_size, dz)
-
-    device_size, dz = determine_grid_size_and_spacing(device_width, layer_permittivities, layer_permeabilities)
+    dz = grid.determine_grid_spacing(device_width, layer_permittivities, layer_permeabilities)
 
     # Determine grid size
-    spacer_region_size = 10
-    layer_widths = [spacer_region_size, device_size, spacer_region_size]
+    layer_sizes = []
+    for layer_width in layer_widths:
+        layer_size = int(np.ceil(layer_width/dz))
+        layer_sizes.append(layer_size)
 
-    Nz = grid.compute_grid_size(layer_widths)
+    Nz = grid.compute_grid_size(layer_sizes)
         
-    epsilon_r, mu_r = grid.generate_grid_1D(Nz, layer_widths, layer_permittivities, layer_permeabilities)
+    epsilon_r, mu_r = grid.generate_grid_1D(Nz, layer_sizes, layer_permittivities, layer_permeabilities)
     n = np.sqrt(epsilon_r*mu_r)
 
     # Compute time step
@@ -96,8 +80,8 @@ def FDTD_engine(plot=False):
     # Initialize plot
     fig, ax = plt.subplots(nrows=2, ncols=1)
 
-    device_start_index = layer_widths[0] + 2
-    device_end_index = layer_widths[0] + layer_widths[1] + 2
+    device_start_index = layer_sizes[0] + 2
+    device_end_index = layer_sizes[0] + layer_sizes[1] + 2
     device_width = z[device_end_index] - z[device_start_index]
     rectangle = Rectangle((z[device_start_index], -1.5), device_width, 3, facecolor='grey')
 
