@@ -12,21 +12,26 @@ def FDTD_engine(plot=False):
     layer_permittivities = np.array([1.0, 6.0, 1.0])
     layer_permeabilities = np.array([1.0, 2.0, 1.0])
 
-    # Wavelength resolution
-    wavelength_resolution = 20  # Number of points to resolve a wave with
-    max_index_of_refraction = np.max(np.sqrt(layer_permittivities*layer_permeabilities))
-    lambda_min = c/(max_frequency*max_index_of_refraction)
-    delta_lambda = lambda_min/wavelength_resolution
+    def determine_grid_size_and_spacing(device_width, layer_permittivities, layer_permeabilities):
+        # Wavelength resolution
+        wavelength_resolution = 20  # Number of points to resolve a wave with
+        max_index_of_refraction = np.max(np.sqrt(layer_permittivities*layer_permeabilities))
+        lambda_min = c/(max_frequency*max_index_of_refraction)
+        delta_lambda = lambda_min/wavelength_resolution
 
-    # Structure resolution
-    device_resolution = 4  # Number of points to resolve device geometry witih
-    delta_d = device_width/device_resolution
+        # Structure resolution
+        device_resolution = 4  # Number of points to resolve device geometry witih
+        delta_d = device_width/device_resolution
 
-    # Grid resolution
-    grid_step_size_unsnapped = min(delta_lambda, delta_d)
-    grid_size_unsnapped = device_width/grid_step_size_unsnapped
-    device_size = int(np.ceil(grid_size_unsnapped))
-    dz = device_width/device_size
+        # Grid resolution
+        grid_step_size_unsnapped = min(delta_lambda, delta_d)
+        grid_size_unsnapped = device_width/grid_step_size_unsnapped
+        device_size = int(np.ceil(grid_size_unsnapped))
+        dz = device_width/device_size
+
+        return (device_size, dz)
+
+    device_size, dz = determine_grid_size_and_spacing(device_width, layer_permittivities, layer_permeabilities)
 
     # Determine grid size
     spacer_region_size = 10
@@ -47,6 +52,7 @@ def FDTD_engine(plot=False):
     t0 = 6*tau
 
     # Compute number of time steps
+    max_index_of_refraction = np.max(n)
     t_prop = max_index_of_refraction*Nz*dz/c
     total_runtime = 12*tau + 5*t_prop
     steps = int(np.ceil(total_runtime/dt))
@@ -154,6 +160,8 @@ def FDTD_engine(plot=False):
     transmitted_fourier = transmitted_fourier*dt
     source_fourier = source_fourier*dt
 
-    return (reflected_fourier, transmitted_fourier, source_fourier)
+    return (reflected_fourier, transmitted_fourier, source_fourier, conservation_of_energy)
 
 # %%
+if __name__ == "__main__":
+    FDTD_engine(True)
