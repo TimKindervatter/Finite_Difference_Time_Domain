@@ -2,8 +2,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+import generate_grid as grid
 
-def FDTD_engine(plot=False)
+def FDTD_engine(plot=False):
     # Define problem
     c = 299792458  # Speed of light in m/s
     max_frequency = 1e9  # Hz
@@ -31,46 +32,9 @@ def FDTD_engine(plot=False)
     spacer_region_size = 10
     layer_widths = [spacer_region_size, device_size, spacer_region_size]
 
-
-    def compute_grid_size(layer_widths):
-        num_reflection_cells = 1
-        num_source_cells = 1
-        num_transmission_cells = 1
-
-        full_grid_size = num_reflection_cells + num_source_cells + sum(layer_widths) + num_transmission_cells
-
-        return full_grid_size
-
-
-    Nz = compute_grid_size(layer_widths)
-
-
-    def generate_grid_1D(full_grid_size, layer_widths, epsilons, mus):
-        epsilon_r = np.ones(full_grid_size)
-        mu_r = np.ones(full_grid_size)
-
-        # Fill grid with device layer by layer
-        for i, _ in enumerate(layer_widths):
-            offset = 2  # num_reflection_cells + num_source_cells
-            layer_start_index = offset + sum(layer_widths[:i])
-            layer_end_index = offset + sum(layer_widths[:i+2])
-
-            epsilon_r[layer_start_index:layer_end_index] = epsilons[i]
-            mu_r[layer_start_index:layer_end_index] = mus[i]
-
-        return (epsilon_r, mu_r)
-
-        # device_start_index = num_reflection_cells + num_source_cells + spacer_region_size
-        # device_end_index = device_start_index + device_size - 1
-
-        # # Set device material parameters
-        # epsilon_r = np.ones(Nz)
-        # epsilon_r[device_start_index:device_end_index + 1] = device_permittivity
-        # mu_r = np.ones(Nz)
-        # mu_r[device_start_index:device_end_index + 1] = device_permeability
+    Nz = grid.compute_grid_size(layer_widths)
         
-
-    epsilon_r, mu_r = generate_grid_1D(Nz, layer_widths, layer_permittivities, layer_permeabilities)
+    epsilon_r, mu_r = grid.generate_grid_1D(Nz, layer_widths, layer_permittivities, layer_permeabilities)
     n = np.sqrt(epsilon_r*mu_r)
 
     # Compute time step
