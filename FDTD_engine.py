@@ -2,16 +2,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import generate_grid as grid
-import FDTD_plotting_utils as fplot
+import utils
 from global_constants import c, max_frequency
 
 def FDTD_engine(plot=False):
     # Define problem
     device_width = 0.3048
     spacer_region_width = 0.3048/7.1
-    layer_widths = [spacer_region_width, device_width, spacer_region_width]  # Layer widths in meters
-    layer_permittivities = np.array([1.0, 6.0, 1.0])
-    layer_permeabilities = np.array([1.0, 2.0, 1.0])
+    anti_reflection_width = 1.6779e-2
+    layer_widths = [spacer_region_width, anti_reflection_width, device_width, anti_reflection_width, spacer_region_width]  # Layer widths in meters
+    layer_permittivities = np.array([1.0, 3.46, 12.0, 3.46, 1.0])
+    layer_permeabilities = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
     layer_refractive_indices = np.sqrt(layer_permittivities*layer_permeabilities)
 
     dz = grid.determine_grid_spacing(device_width, layer_permittivities, layer_permeabilities)
@@ -69,7 +70,7 @@ def FDTD_engine(plot=False):
     e1 = 0
 
     # Initialize Fourier Transforms
-    Nfreq = 100
+    Nfreq = 1000
     freq = np.linspace(0, max_frequency, Nfreq)
     K = np.exp(-1j*2*np.pi*dt*freq)
 
@@ -80,12 +81,7 @@ def FDTD_engine(plot=False):
 
     # Initialize plot
     fig, ax = plt.subplots(nrows=2, ncols=1)
-
-    # device_start_index = layer_sizes[0] + 2
-    # device_end_index = layer_sizes[0] + layer_sizes[1] + 2
-    # device_width = z[device_end_index] - z[device_start_index]
-
-    rectangles = fplot.create_layer_shadings(z, layer_sizes, layer_refractive_indices)
+    rectangles = utils.create_layer_shadings(z, layer_sizes, layer_refractive_indices)
 
     for T in range(steps):
         # Record H at boundary
@@ -125,7 +121,7 @@ def FDTD_engine(plot=False):
 
         if plot:
             # Visualize fields
-            if (T % 10 == 0):
+            if (T % 100 == 0):
                 for rectangle in rectangles:
                     ax[0].add_patch(rectangle)
                 ax[0].plot(z, Ey)
