@@ -12,6 +12,7 @@ def FDTD_engine(plot=False):
     layer_widths = [spacer_region_width, device_width, spacer_region_width]  # Layer widths in meters
     layer_permittivities = np.array([1.0, 6.0, 1.0])
     layer_permeabilities = np.array([1.0, 2.0, 1.0])
+    layer_refractive_indices = np.sqrt(layer_permittivities*layer_permeabilities)
 
     dz = grid.determine_grid_spacing(device_width, layer_permittivities, layer_permeabilities)
 
@@ -80,10 +81,20 @@ def FDTD_engine(plot=False):
     # Initialize plot
     fig, ax = plt.subplots(nrows=2, ncols=1)
 
-    device_start_index = layer_sizes[0] + 2
-    device_end_index = layer_sizes[0] + layer_sizes[1] + 2
-    device_width = z[device_end_index] - z[device_start_index]
-    rectangle = Rectangle((z[device_start_index], -1.5), device_width, 3, facecolor='grey')
+    # device_start_index = layer_sizes[0] + 2
+    # device_end_index = layer_sizes[0] + layer_sizes[1] + 2
+    # device_width = z[device_end_index] - z[device_start_index]
+
+    rectangles = []
+    normalized_refractive_indices = (layer_refractive_indices - np.min(layer_refractive_indices))/(np.max(layer_refractive_indices) - np.min(layer_refractive_indices))
+
+    for i, layer_size in enumerate(layer_sizes):
+        layer_start_index, _ = grid.compute_layer_start_and_end_indices(layer_sizes, i)
+
+        layer_color = str(1 - 0.6*normalized_refractive_indices[i])
+        # color_tuple = (layer_color, layer_color, layer_color)
+        rectangle = Rectangle((z[layer_start_index], -1.5), layer_size, 3, facecolor=layer_color)
+        rectangles.append(rectangle)
 
     for T in range(steps):
         # Record H at boundary
@@ -124,7 +135,8 @@ def FDTD_engine(plot=False):
         if plot:
             # Visualize fields
             if (T % 10 == 0):
-                ax[0].add_patch(rectangle)
+                for rectangle in rectangles:
+                    ax[0].add_patch(rectangle)
                 ax[0].plot(z, Ey)
                 ax[0].plot(z, Hx)
                 ax[0].set_xlim([zmin, zmax])
