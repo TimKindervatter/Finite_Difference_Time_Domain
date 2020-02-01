@@ -5,55 +5,84 @@ from matplotlib.patches import Rectangle
 
 # Define problem
 c = 299792458  # Speed of light in m/s
-fmax = 1e9  # Hz
-d = 0.3048  # Device width in meters
-device_permittivity = 6.0
-device_permeability = 2.0
+max_frequency = 1e9  # Hz
+device_width = 0.3048  # Device width in meters
+layer_permittivities = np.array([1.0, 6.0, 1.0])
+layer_permeabilities = np.array([1.0, 2.0, 1.0])
+n = np.sqrt(layer_permittivities*layer_permeabilities)
 
 # Wavelength resolution
-N_lambda = 20  # Number of points to resolve a wave with
-nmax = np.sqrt(device_permittivity*device_permeability)
-lambda_min = c/(fmax*nmax)
-delta_lambda = lambda_min/N_lambda
+wavelength_resolution = 20  # Number of points to resolve a wave with
+max_index_of_refraction = np.max(n)
+lambda_min = c/(max_frequency*max_index_of_refraction)
+delta_lambda = lambda_min/wavelength_resolution
 
 # Structure resolution
-N_d = 4  # Number of points to resolve device geometry witih
-delta_d = d/N_d
+device_resolution = 4  # Number of points to resolve device geometry witih
+delta_d = device_width/device_resolution
 
 # Grid resolution
-dz_prime = min(delta_lambda, delta_d)
-N_prime = d/dz_prime
-N = int(np.ceil(N_prime))
-dz = d/N
+grid_step_size_unsnapped = min(delta_lambda, delta_d)
+grid_size_unsnapped = device_width/grid_step_size_unsnapped
+device_size = int(np.ceil(grid_size_unsnapped))
+dz = device_width/device_size
 
 # Determine grid size
 spacer_region_size = 10
-Nz = N + 2*spacer_region_size + 3
+layer_widths = [spacer_region_size, device_size, spacer_region_size]
 
-# Determine position of device in grid
-num_reflection_cells = 1
-num_source_cells = 1
-device_start_index = num_reflection_cells + num_source_cells + spacer_region_size
-device_end_index = device_start_index + N - 1
 
-# Set device material parameters
-epsilon_r = np.ones(Nz)
-epsilon_r[device_start_index:device_end_index + 1] = device_permittivity
-mu_r = np.ones(Nz)
-mu_r[device_start_index:device_end_index + 1] = device_permeability
-n = np.sqrt(epsilon_r*mu_r)
+def compute_grid_size(layer_widths):
+    num_reflection_cells = 1
+    num_source_cells = 1
+    num_transmission_cells = 1
+
+    full_grid_size = num_reflection_cells + num_source_cells + sum(layer_widths) + num_transmission_cells
+
+    return full_grid_size
+
+
+Nz = compute_grid_size(layer_widths)
+
+
+def generate_grid_1D(full_grid_size, layer_widths, epsilons, mus):
+    epsilon_r = np.ones(full_grid_size)
+    mu_r = np.ones(full_grid_size)
+
+    # Fill grid with device layer by layer
+    for i, _ in enumerate(layer_widths):
+        offset = 2  # num_reflection_cells + num_source_cells
+        layer_start_index = offset + sum(layer_widths[:i])
+        layer_end_index = offset + sum(layer_widths[:i+2])
+
+        epsilon_r[layer_start_index:layer_end_index] = epsilons[i]
+        mu_r[layer_start_index:layer_end_index] = mus[i]
+
+    return (epsilon_r, mu_r)
+
+    # device_start_index = num_reflection_cells + num_source_cells + spacer_region_size
+    # device_end_index = device_start_index + device_size - 1
+
+    # # Set device material parameters
+    # epsilon_r = np.ones(Nz)
+    # epsilon_r[device_start_index:device_end_index + 1] = device_permittivity
+    # mu_r = np.ones(Nz)
+    # mu_r[device_start_index:device_end_index + 1] = device_permeability
+    
+
+epsilon_r, mu_r = generate_grid_1D(Nz, layer_widths, layer_permittivities, layer_permeabilities)
 
 # Compute time step
-n_bc = 1.0
-dt = n_bc*dz/(2*c)
+boundary_refractive_index = 1.0
+dt = boundary_refractive_index*dz/(2*c)
 
 # Compute source parameters
 nzsrc = 1
-tau = 0.5/fmax
+tau = 0.5/max_frequency
 t0 = 6*tau
 
 # Compute number of time steps
-t_prop = nmax*Nz*dz/c
+t_prop = max_index_of_refraction*Nz*dz/c
 total_runtime = 12*tau + 5*t_prop
 steps = int(np.ceil(total_runtime/dt))
 
@@ -85,7 +114,7 @@ e1 = 0
 
 # Initialize Fourier Transforms
 Nfreq = 100
-freq = np.linspace(0, fmax, Nfreq)
+freq = np.linspace(0, max_frequency, Nfreq)
 K = np.exp(-1j*2*np.pi*dt*freq)
 
 # Initialize Fourier transforms for reflected and transmitted fields
@@ -96,6 +125,8 @@ source_fourier = np.zeros(Nfreq, dtype=complex)
 # Initialize plot
 fig, ax = plt.subplots(nrows=2, ncols=1)
 
+device_start_index = layer_widths[0] + 2
+device_end_index = layer_widths[0] + layer_widths[1] + 2
 device_width = z[device_end_index] - z[device_start_index]
 rectangle = Rectangle((z[device_start_index], -1.5), device_width, 3, facecolor='grey')
 
@@ -146,7 +177,7 @@ for T in range(steps):
         ax[1].plot(freq, reflectance)
         ax[1].plot(freq, transmittance)
         ax[1].plot(freq, conservation_of_energy)
-        ax[1].set_xlim([0, fmax])
+        ax[1].set_xlim([0, max_frequency])
         ax[1].set_ylim([0, 1.5])
 
         plt.pause(1/60)
