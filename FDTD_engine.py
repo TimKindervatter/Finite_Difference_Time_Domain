@@ -1,8 +1,8 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 import generate_grid as grid
+import FDTD_plotting_utils as fplot
 from global_constants import c, max_frequency
 
 def FDTD_engine(plot=False):
@@ -85,16 +85,7 @@ def FDTD_engine(plot=False):
     # device_end_index = layer_sizes[0] + layer_sizes[1] + 2
     # device_width = z[device_end_index] - z[device_start_index]
 
-    rectangles = []
-    normalized_refractive_indices = (layer_refractive_indices - np.min(layer_refractive_indices))/(np.max(layer_refractive_indices) - np.min(layer_refractive_indices))
-
-    for i, layer_size in enumerate(layer_sizes):
-        layer_start_index, _ = grid.compute_layer_start_and_end_indices(layer_sizes, i)
-
-        layer_color = str(1 - 0.6*normalized_refractive_indices[i])
-        # color_tuple = (layer_color, layer_color, layer_color)
-        rectangle = Rectangle((z[layer_start_index], -1.5), layer_size, 3, facecolor=layer_color)
-        rectangles.append(rectangle)
+    rectangles = fplot.create_layer_shadings(z, layer_sizes, layer_refractive_indices)
 
     for T in range(steps):
         # Record H at boundary
