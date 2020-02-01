@@ -9,11 +9,10 @@ max_frequency = 1e9  # Hz
 device_width = 0.3048  # Device width in meters
 layer_permittivities = np.array([1.0, 6.0, 1.0])
 layer_permeabilities = np.array([1.0, 2.0, 1.0])
-n = np.sqrt(layer_permittivities*layer_permeabilities)
 
 # Wavelength resolution
 wavelength_resolution = 20  # Number of points to resolve a wave with
-max_index_of_refraction = np.max(n)
+max_index_of_refraction = np.max(np.sqrt(layer_permittivities*layer_permeabilities))
 lambda_min = c/(max_frequency*max_index_of_refraction)
 delta_lambda = lambda_min/wavelength_resolution
 
@@ -71,6 +70,7 @@ def generate_grid_1D(full_grid_size, layer_widths, epsilons, mus):
     
 
 epsilon_r, mu_r = generate_grid_1D(Nz, layer_widths, layer_permittivities, layer_permeabilities)
+n = np.sqrt(epsilon_r*mu_r)
 
 # Compute time step
 boundary_refractive_index = 1.0
