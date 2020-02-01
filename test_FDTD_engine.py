@@ -159,6 +159,6 @@ def test_FDTD_engine():
 
     actual_reflected, actual_transmitted, actual_source = FDTD_engine()
 
-    assert(np.all(np.isclose(actual_reflected, reflected_fourier)))
-    assert(np.all(np.isclose(actual_transmitted, transmitted_fourier)))
-    assert(np.all(np.isclose(actual_source, source_fourier)))
+    assert(np.allclose(actual_reflected, reflected_fourier))
+    assert(np.allclose(actual_transmitted, transmitted_fourier))
+    assert(np.allclose(actual_source, source_fourier))
