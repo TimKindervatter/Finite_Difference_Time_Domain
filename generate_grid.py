@@ -3,13 +3,13 @@ from global_constants import c, max_frequency
 
 
 def determine_grid_spacing(device_width, layer_permittivities, layer_permeabilities):
-    
+
     delta_lambda = determine_wavlength_resolution(layer_permittivities, layer_permeabilities)
     delta_d = determine_device_resolution(device_width)
     grid_step_size = snap_grid(device_width, delta_lambda, delta_d)
 
     return grid_step_size
-        
+
 
 def determine_wavlength_resolution(layer_permittivities, layer_permeabilities):
     # Wavelength resolution
@@ -43,27 +43,33 @@ def round_cells_up(unrounded_number_of_cells):
     return int(np.ceil(unrounded_number_of_cells))
 
 
-def compute_grid_size(layer_widths):
+def compute_grid_size(layer_sizes):
     num_reflection_cells = 1
     num_source_cells = 1
     num_transmission_cells = 1
 
-    full_grid_size = num_reflection_cells + num_source_cells + sum(layer_widths) + num_transmission_cells
+    full_grid_size = num_reflection_cells + num_source_cells + sum(layer_sizes) + num_transmission_cells
 
     return full_grid_size
 
 
-def generate_grid_1D(full_grid_size, layer_widths, epsilons, mus):
+def generate_grid_1D(full_grid_size, layer_sizes, epsilons, mus):
     epsilon_r = np.ones(full_grid_size)
     mu_r = np.ones(full_grid_size)
 
     # Fill grid with device layer by layer
-    for i, _ in enumerate(layer_widths):
-        offset = 2  # num_reflection_cells + num_source_cells
-        layer_start_index = offset + sum(layer_widths[:i])
-        layer_end_index = offset + sum(layer_widths[:i+2])
-
+    for i, _ in enumerate(layer_sizes):
+        layer_start_index, layer_end_index = compute_layer_start_and_end_indices(layer_sizes, i)
+        
         epsilon_r[layer_start_index:layer_end_index] = epsilons[i]
         mu_r[layer_start_index:layer_end_index] = mus[i]
 
     return (epsilon_r, mu_r)
+
+
+def compute_layer_start_and_end_indices(layer_sizes, i):
+    offset = 2  # num_reflection_cells + num_source_cells
+    layer_start_index = offset + sum(layer_sizes[:i])
+    layer_end_index = offset + sum(layer_sizes[:i+2])
+
+    return (layer_start_index, layer_end_index)
