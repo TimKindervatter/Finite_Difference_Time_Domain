@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import utils
 import config
 from config import c
+from timeit import default_timer as timer
+from numba import njit
 
 
 def FDTD_engine(plot=False):
@@ -32,7 +34,8 @@ def FDTD_engine(plot=False):
     max_index_of_refraction = np.max(n)
     t_prop = max_index_of_refraction*Nz*dz/c
 
-    total_runtime = 3*(12*tau + 5*t_prop)
+    # TODO: Make the coefficient out front a problem_instance member
+    total_runtime = 1*(12*tau + 5*t_prop)
     steps = int(np.ceil(total_runtime/dt))
 
     # Compute source functions for Ey/Hx mode
@@ -64,8 +67,7 @@ def FDTD_engine(plot=False):
         h1 = Hx[0]
         
         # Update H from E
-        for nz in range(Nz-1):
-            Hx[nz] = Hx[nz] + mHx[nz]*(Ey[nz + 1] - Ey[nz])/dz
+        update_H(Hx, Ey, mHx, dz, Nz)
         Hx[Nz-1] = Hx[Nz - 1] + mHx[Nz-1]*(e2 - Ey[Nz - 1])/dz
 
         # Handle H-field source
@@ -77,8 +79,7 @@ def FDTD_engine(plot=False):
 
         # Update E from H
         Ey[0] = Ey[0] + mEy[0]*(Hx[0] - h2)/dz
-        for nz in range(1, Nz):
-            Ey[nz] = Ey[nz] + mEy[nz]*(Hx[nz] - Hx[nz - 1])/dz
+        update_E(Ey, Hx, mEy, dz, Nz)
 
         # Handle E-field source
         Ey[source_location] = Ey[source_location] - (mEy[source_location]/dz)*Hxsrc[T]
@@ -92,6 +93,17 @@ def FDTD_engine(plot=False):
     fourier_transform_manager.finalize_fourier_transforms()
 
     return (fourier_transform_manager.reflected_fourier, fourier_transform_manager.transmitted_fourier, fourier_transform_manager.source_fourier, fourier_transform_manager.conservation_of_energy)
+
+
+@njit(parallel=True)
+def update_H(Hx, Ey, mHx, dz, Nz):
+    for nz in range(Nz-1):
+        Hx[nz] = Hx[nz] + mHx[nz]*(Ey[nz + 1] - Ey[nz])/dz
+
+
+def update_E(Ey, Hx, mEy, dz, Nz):
+    for nz in range(1, Nz):
+        Ey[nz] = Ey[nz] + mEy[nz]*(Hx[nz] - Hx[nz - 1])/dz
 
 
 if __name__ == "__main__":

@@ -37,8 +37,9 @@ def update_plot(T, z, Ey, Hx, problem_instance):
         ax[0].set_xlim([z[0], z[-1]])
         ax[0].set_ylim([-1.5, 1.5])
 
-        linear = False
-        log = True
+        # TODO: Make plotting style a problem_instance member
+        linear = True
+        log = False
 
         if linear:
             ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.reflectance, label='Reflectance')
