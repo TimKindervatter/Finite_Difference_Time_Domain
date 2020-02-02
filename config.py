@@ -15,24 +15,15 @@ class ProblemSetup:
 
     def __init__(self, device_name):
         if device_name == "Slab":
-            self.device = Slab()
             self.max_frequency = 1e9  # Hz
+            self.device = Slab(self.max_frequency)
         elif device_name == "AntiReflectionLayer":
-            self.device = AntiReflectionLayer()
             self.max_frequency = 5e9  # Hz
-
-        device = self.device
-
-        device.grid_resolution = grid.determine_grid_spacing(device, self.max_frequency)
-        device.layer_sizes = grid.compute_layer_sizes(device)
-        device.full_grid_size = grid.compute_grid_size(device.layer_sizes)
-        device.epsilon_r, device.mu_r = grid.generate_material_grid(device)
-        device.index_of_refraction = np.sqrt(device.epsilon_r*device.mu_r)
-        device.grid = grid.generate_grid_1D(device)
-
+            self.device = AntiReflectionLayer(self.max_frequency)
+            
         # Initialize plot
         self.figure, self.axes = plt.subplots(nrows=2, ncols=1)
-        self.rectangles = utils.create_layer_shadings(device)
+        self.rectangles = utils.create_layer_shadings(self.device)
 
 
 class Device:
@@ -48,8 +39,17 @@ class Device:
     index_of_refraction = None
     grid = None
 
+    def __init__(self, max_frequency):
+        self.grid_resolution = grid.determine_grid_spacing(self, max_frequency)
+        self.layer_sizes = grid.compute_layer_sizes(self)
+        self.full_grid_size = grid.compute_grid_size(self.layer_sizes)
+        self.epsilon_r, self.mu_r = grid.generate_material_grid(self)
+        self.index_of_refraction = np.sqrt(self.epsilon_r*self.mu_r)
+        self.grid = grid.generate_grid_1D(self)
+
+
 class Slab(Device):
-    def __init__(self):
+    def __init__(self, max_frequency):
         
         device_width = 0.3048
         spacer_region_width = 0.3048/7.1
@@ -59,10 +59,11 @@ class Slab(Device):
         self.layer_permeabilities = np.array([1.0, 2.0, 1.0])
         self.layer_refractive_indices = np.sqrt(self.layer_permittivities*self.layer_permeabilities)
         
+        super().__init__(max_frequency)
 
 
 class AntiReflectionLayer(Device):
-    def __init__(self):
+    def __init__(self, max_frequency):
         device_width = 0.3048
         spacer_region_width = 0.3048/7.1
         anti_reflection_width = 1.6779e-2
@@ -72,3 +73,4 @@ class AntiReflectionLayer(Device):
         self.layer_permeabilities = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
         self.layer_refractive_indices = np.sqrt(self.layer_permittivities*self.layer_permeabilities)
         
+        super().__init__(max_frequency)

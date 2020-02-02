@@ -8,7 +8,7 @@ from config import c
 
 def FDTD_engine(plot=False):
     # Define problem
-    device_name = "AntiReflectionLayer"
+    device_name = "Slab"
     problem_instance = config.ProblemSetup(device_name)
 
     max_frequency = problem_instance.max_frequency
