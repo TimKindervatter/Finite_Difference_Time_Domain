@@ -1,10 +1,10 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
-import generate_grid as grid
 import utils
 import config
 from config import c
+
 
 def FDTD_engine(plot=False):
     # Define problem
@@ -135,6 +135,6 @@ def FDTD_engine(plot=False):
 
     return (reflected_fourier, transmitted_fourier, source_fourier, conservation_of_energy)
 
-# %%
+
 if __name__ == "__main__":
     FDTD_engine(True)
