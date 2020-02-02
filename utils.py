@@ -37,12 +37,23 @@ def update_plot(T, z, Ey, Hx, problem_instance):
         ax[0].set_xlim([z[0], z[-1]])
         ax[0].set_ylim([-1.5, 1.5])
 
-        ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.reflectance, label='Reflectance')
-        ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.transmittance, label='Transmittance')
-        ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.conservation_of_energy, label='Conservation')
-        ax[1].set_xlim([problem_instance.min_frequency, problem_instance.max_frequency])
-        ax[1].set_ylim([0, 1.5])
-        ax[1].legend()
+        linear = False
+        log = True
+
+        if linear:
+            ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.reflectance, label='Reflectance')
+            ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.transmittance, label='Transmittance')
+            ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.conservation_of_energy, label='Conservation')
+            ax[1].set_xlim([0, problem_instance.max_frequency])
+            ax[1].set_ylim([0, 1.5])
+            ax[1].legend()
+        if log:
+            ax[1].plot(fourier_transform_manager.freq, 10*np.log10(fourier_transform_manager.reflectance), label='Reflectance')
+            ax[1].plot(fourier_transform_manager.freq, 10*np.log10(fourier_transform_manager.transmittance), label='Transmittance')
+            ax[1].plot(fourier_transform_manager.freq, 10*(fourier_transform_manager.conservation_of_energy), label='Conservation')
+            ax[1].set_xlim([2e14, 4e14])
+            ax[1].set_ylim([-40, 0])
+            ax[1].legend()
 
         plt.pause(1/60)
         ax[0].cla()

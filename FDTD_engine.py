@@ -8,7 +8,7 @@ from config import c
 
 def FDTD_engine(plot=False):
     # Define problem
-    device_name = "AntiReflectionLayer"
+    device_name = "BraggGrating"
     problem_instance = config.ProblemInstance(device_name)
 
     max_frequency = problem_instance.max_frequency
@@ -32,7 +32,7 @@ def FDTD_engine(plot=False):
     max_index_of_refraction = np.max(n)
     t_prop = max_index_of_refraction*Nz*dz/c
 
-    total_runtime = 12*tau + 5*t_prop
+    total_runtime = 3*(12*tau + 5*t_prop)
     steps = int(np.ceil(total_runtime/dt))
 
     # Compute source functions for Ey/Hx mode
