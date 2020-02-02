@@ -20,13 +20,21 @@ class ProblemInstance:
 
     def __init__(self, device_name):
         if device_name == "Slab":
+            self.min_frequency = 0  # Hz
             self.max_frequency = 1e9  # Hz
             self.device = dv.Slab(self.max_frequency)
             self.num_frequencies = 100
             self.plot_update_interval = 20
         elif device_name == "AntiReflectionLayer":
+            self.min_frequency = 0  # Hz
             self.max_frequency = 5e9  # Hz
             self.device = dv.AntiReflectionLayer(self.max_frequency)
+            self.num_frequencies = 500
+            self.plot_update_interval = 20
+        elif device_name == "BraggGrating":
+            self.min_frequency = c/1100e-9  # Hz
+            self.max_frequency = c/900e-9  # Hz
+            self.device = dv.BraggGrating(self.max_frequency)
             self.num_frequencies = 500
             self.plot_update_interval = 20
             
@@ -35,7 +43,7 @@ class ProblemInstance:
         self.rectangles = utils.create_layer_shadings(self.device)
 
         self.time_step = self.compute_time_step()
-        self.fourier_transform_manager = fourier_transform.FourierTransform(self.num_frequencies, self.max_frequency, self.time_step)
+        self.fourier_transform_manager = fourier_transform.FourierTransform(self.num_frequencies, self.min_frequency, self.max_frequency, self.time_step)
 
     def compute_time_step(self):
         # Compute time step

@@ -4,11 +4,11 @@ import numpy as np
 class FourierTransform:
     # num_frequencies
     # kernel
-    def __init__(self, Nfreq, max_frequency, time_step):
+    def __init__(self, Nfreq, min_frequency, max_frequency, time_step):
         # Initialize Fourier Transforms
         self.num_frequencies = Nfreq
         self.time_step = time_step
-        self.freq = np.linspace(0, max_frequency, self.num_frequencies)
+        self.freq = np.linspace(min_frequency, max_frequency, self.num_frequencies)
         self.kernel = np.exp(-1j*2*np.pi*time_step*self.freq)
 
         # Initialize Fourier transforms for reflected and transmitted fields

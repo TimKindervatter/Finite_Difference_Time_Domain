@@ -145,3 +145,22 @@ class AntiReflectionLayer(Device):
         self.boundary_refractive_index = 1.0
         
         super().__init__(max_frequency)
+
+
+class BraggGrating(Device):
+    def __init__(self, max_frequency):
+        alternating_layer_1_width = 163e-9
+        alternating_layer_2_width = 122e-9
+        spacer_region = 100e-9
+        n1 = 1.5  # SiN
+        n2 = 2.0  # SiO2
+        er1 = n1**2  # SiN is non-magnetic
+        er2 = n2**2  # SiO2 is non-magnetic
+        num_periods = 15
+
+        self.layer_widths = [spacer_region] + [y for x in range(num_periods) for y in [alternating_layer_2_width, alternating_layer_1_width]] + [spacer_region] # Layer widths in meters
+        self.layer_permittivities = np.array([1.0] + [y for x in range(num_periods) for y in [er2, er1]] + [1.0])
+        self.layer_permeabilities = np.array([1.0] + [y for x in range(num_periods) for y in [1.0, 1.0]] + [1.0])
+        self.boundary_refractive_index = 1.0
+        
+        super().__init__(max_frequency)

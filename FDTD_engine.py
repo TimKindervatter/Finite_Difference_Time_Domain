@@ -21,14 +21,10 @@ def FDTD_engine(plot=False):
     mu_r = problem_instance.device.mu_r
     n = problem_instance.device.index_of_refraction
 
-    fig = problem_instance.figure
-    ax = problem_instance.axes
-    rectangles = problem_instance.rectangles
-
     dt = problem_instance.time_step
 
     # Compute source parameters
-    nzsrc = 1
+    source_location = 1
     tau = 0.5/max_frequency
     t0 = 6*tau
 
@@ -41,8 +37,8 @@ def FDTD_engine(plot=False):
 
     # Compute source functions for Ey/Hx mode
     t = np.arange(0, steps)*dt
-    A = np.sqrt(epsilon_r[nzsrc]/mu_r[nzsrc])
-    deltat = n[nzsrc]*dz/(2*c) + dt/2
+    A = np.sqrt(epsilon_r[source_location]/mu_r[source_location])
+    deltat = n[source_location]*dz/(2*c) + dt/2
 
     Eysrc = np.exp(-((t - t0)/tau)**2)
     Hxsrc = -A*np.exp(-((t - t0 + deltat)/tau)**2)
@@ -73,7 +69,7 @@ def FDTD_engine(plot=False):
         Hx[Nz-1] = Hx[Nz - 1] + mHx[Nz-1]*(e2 - Ey[Nz - 1])/dz
 
         # Handle H-field source
-        Hx[nzsrc-1] = Hx[nzsrc-1] - (mHx[nzsrc-1]/dz)*Eysrc[T]
+        Hx[source_location-1] = Hx[source_location-1] - (mHx[source_location-1]/dz)*Eysrc[T]
 
         # Record E at boundary
         e2 = e1
@@ -85,30 +81,13 @@ def FDTD_engine(plot=False):
             Ey[nz] = Ey[nz] + mEy[nz]*(Hx[nz] - Hx[nz - 1])/dz
 
         # Handle E-field source
-        Ey[nzsrc] = Ey[nzsrc] - (mEy[nzsrc]/dz)*Hxsrc[T]
+        Ey[source_location] = Ey[source_location] - (mEy[source_location]/dz)*Hxsrc[T]
         # Ey[nzsrc] = Ey[nzsrc] + g(T)
 
         fourier_transform_manager.update_fourier_transforms(T, Ey, Eysrc, Nz)
 
         if plot:
-            # Visualize fields
-            if (T % problem_instance.plot_update_interval == 0):
-                for rectangle in rectangles:
-                    ax[0].add_patch(rectangle)
-                ax[0].plot(z, Ey)
-                ax[0].plot(z, Hx)
-                ax[0].set_xlim([z[0], z[-1]])
-                ax[0].set_ylim([-1.5, 1.5])
-
-                ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.reflectance)
-                ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.transmittance)
-                ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.conservation_of_energy)
-                ax[1].set_xlim([0, max_frequency])
-                ax[1].set_ylim([0, 1.5])
-
-                plt.pause(1/60)
-                ax[0].cla()
-                ax[1].cla()
+            utils.update_plot(T, z, Ey, Hx, problem_instance)
 
     fourier_transform_manager.finalize_fourier_transforms()
 
