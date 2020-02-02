@@ -4,19 +4,24 @@ import config
 
 
 class Device:
-    layer_widths = []
-    layer_permittivities = []
-    layer_permeabilities = []
-    layer_refractive_indices = []
+    layer_widths = np.zeros(1)
+    layer_permittivities = np.zeros(1)
+    layer_permeabilities = np.zeros(1)
+    layer_refractive_indices = np.zeros(1)
     grid_resolution = 0
-    layer_sizes = []
+    layer_sizes = np.zeros(1)
     full_grid_size = 0
-    epsilon_r = []
-    mu_r = []
-    index_of_refraction = []
-    grid = []
+    epsilon_r = np.zeros(1)
+    mu_r = np.zeros(1)
+    index_of_refraction = np.zeros(1)
+    grid = np.zeros(1)
+    boundary_refractive_index = 0
 
     def __init__(self, max_frequency):
+        if type(self) is Device:
+            raise Exception('Device is an abstract class and cannot be instantiated directly')
+
+        self.layer_refractive_indices = np.sqrt(self.layer_permittivities*self.layer_permeabilities)
         self.grid_resolution = self.determine_grid_spacing(max_frequency)
         self.layer_sizes = self.compute_layer_sizes()
         self.full_grid_size = self.compute_grid_size(self.layer_sizes)
@@ -122,7 +127,8 @@ class Slab(Device):
         self.layer_widths = [spacer_region_width, device_width, spacer_region_width]  # Layer widths in meters
         self.layer_permittivities = np.array([1.0, 6.0, 1.0])
         self.layer_permeabilities = np.array([1.0, 2.0, 1.0])
-        self.layer_refractive_indices = np.sqrt(self.layer_permittivities*self.layer_permeabilities)
+        
+        self.boundary_refractive_index = 1.0
         
         super().__init__(max_frequency)
 
@@ -130,12 +136,12 @@ class Slab(Device):
 class AntiReflectionLayer(Device):
     def __init__(self, max_frequency):
         device_width = 0.3048
-        spacer_region_width = 0.3048/7.1
+        spacer_region_width = 0.3048/7.1  # Results in 10 grid cells
         anti_reflection_width = 1.6779e-2
 
         self.layer_widths = [spacer_region_width, anti_reflection_width, device_width, anti_reflection_width, spacer_region_width]  # Layer widths in meters
         self.layer_permittivities = np.array([1.0, 3.46, 12.0, 3.46, 1.0])
         self.layer_permeabilities = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
-        self.layer_refractive_indices = np.sqrt(self.layer_permittivities*self.layer_permeabilities)
+        self.boundary_refractive_index = 1.0
         
         super().__init__(max_frequency)

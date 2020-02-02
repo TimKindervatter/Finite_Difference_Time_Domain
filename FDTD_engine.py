@@ -25,9 +25,7 @@ def FDTD_engine(plot=False):
     ax = problem_instance.axes
     rectangles = problem_instance.rectangles
 
-    # Compute time step
-    boundary_refractive_index = 1.0
-    dt = boundary_refractive_index*dz/(2*c)
+    dt = problem_instance.time_grid
 
     # Compute source parameters
     nzsrc = 1
