@@ -7,7 +7,7 @@ import fourier_transform
 c = 299792458  # Speed of light in m/s
 
 
-class ProblemSetup:
+class ProblemInstance:
     device = None
     max_frequency = None
     figure = None
