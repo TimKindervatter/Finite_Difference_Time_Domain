@@ -4,18 +4,18 @@ import config
 
 
 class Device:
-    layer_widths = np.zeros(1)
-    layer_permittivities = np.zeros(1)
-    layer_permeabilities = np.zeros(1)
-    layer_refractive_indices = np.zeros(1)
-    grid_resolution = 0
-    layer_sizes = np.zeros(1)
-    full_grid_size = 0
-    epsilon_r = np.zeros(1)
-    mu_r = np.zeros(1)
-    index_of_refraction = np.zeros(1)
-    grid = np.zeros(1)
-    boundary_refractive_index = 0
+    layer_widths = None
+    layer_permittivities = None
+    layer_permeabilities = None
+    layer_refractive_indices = None
+    grid_resolution = None
+    layer_sizes = None
+    full_grid_size = None
+    epsilon_r = None
+    mu_r = None
+    index_of_refraction = None
+    grid = None
+    boundary_refractive_index = None
 
     def __init__(self, max_frequency):
         if type(self) is Device:

@@ -25,7 +25,7 @@ def FDTD_engine(plot=False):
     ax = problem_instance.axes
     rectangles = problem_instance.rectangles
 
-    dt = problem_instance.time_grid
+    dt = problem_instance.time_step
 
     # Compute source parameters
     nzsrc = 1
@@ -60,15 +60,7 @@ def FDTD_engine(plot=False):
     e2 = 0
     e1 = 0
 
-    # Initialize Fourier Transforms
-    Nfreq = 500
-    freq = np.linspace(0, max_frequency, Nfreq)
-    K = np.exp(-1j*2*np.pi*dt*freq)
-
-    # Initialize Fourier transforms for reflected and transmitted fields
-    reflected_fourier = np.zeros(Nfreq, dtype=complex)
-    transmitted_fourier = np.zeros(Nfreq, dtype=complex)
-    source_fourier = np.zeros(Nfreq, dtype=complex)
+    fourier_transform_manager = problem_instance.fourier_transform_manager
 
     for T in range(steps):
         # Record H at boundary
@@ -96,16 +88,7 @@ def FDTD_engine(plot=False):
         Ey[nzsrc] = Ey[nzsrc] - (mEy[nzsrc]/dz)*Hxsrc[T]
         # Ey[nzsrc] = Ey[nzsrc] + g(T)
 
-        # Update Fourier transforms
-        #TODO: Parallelize Fourier computation
-        for f in range(Nfreq):
-            reflected_fourier[f] = reflected_fourier[f] + (K[f]**T)*Ey[0]
-            transmitted_fourier[f] = transmitted_fourier[f] + (K[f]**T)*Ey[Nz - 1]
-            source_fourier[f] = source_fourier[f] + (K[f]**T)*Eysrc[T]
-
-        reflectance = np.abs(reflected_fourier/source_fourier)**2
-        transmittance = np.abs(transmitted_fourier/source_fourier)**2
-        conservation_of_energy = reflectance + transmittance
+        fourier_transform_manager.update_fourier_transforms(T, Ey, Eysrc, Nz)
 
         if plot:
             # Visualize fields
@@ -117,9 +100,9 @@ def FDTD_engine(plot=False):
                 ax[0].set_xlim([z[0], z[-1]])
                 ax[0].set_ylim([-1.5, 1.5])
 
-                ax[1].plot(freq, reflectance)
-                ax[1].plot(freq, transmittance)
-                ax[1].plot(freq, conservation_of_energy)
+                ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.reflectance)
+                ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.transmittance)
+                ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.conservation_of_energy)
                 ax[1].set_xlim([0, max_frequency])
                 ax[1].set_ylim([0, 1.5])
 
@@ -127,11 +110,9 @@ def FDTD_engine(plot=False):
                 ax[0].cla()
                 ax[1].cla()
 
-    reflected_fourier = reflected_fourier*dt
-    transmitted_fourier = transmitted_fourier*dt
-    source_fourier = source_fourier*dt
+    fourier_transform_manager.finalize_fourier_transforms()
 
-    return (reflected_fourier, transmitted_fourier, source_fourier, conservation_of_energy)
+    return (fourier_transform_manager.reflected_fourier, fourier_transform_manager.transmitted_fourier, fourier_transform_manager.source_fourier, fourier_transform_manager.conservation_of_energy)
 
 
 if __name__ == "__main__":
