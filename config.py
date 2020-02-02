@@ -23,10 +23,12 @@ class ProblemSetup:
             self.max_frequency = 1e9  # Hz
             self.device = dv.Slab(self.max_frequency)
             self.num_frequencies = 100
+            self.plot_update_interval = 20
         elif device_name == "AntiReflectionLayer":
             self.max_frequency = 5e9  # Hz
             self.device = dv.AntiReflectionLayer(self.max_frequency)
             self.num_frequencies = 500
+            self.plot_update_interval = 20
             
         # Initialize plot
         self.figure, self.axes = plt.subplots(nrows=2, ncols=1)

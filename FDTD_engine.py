@@ -8,7 +8,7 @@ from config import c
 
 def FDTD_engine(plot=False):
     # Define problem
-    device_name = "Slab"
+    device_name = "AntiReflectionLayer"
     problem_instance = config.ProblemSetup(device_name)
 
     max_frequency = problem_instance.max_frequency
@@ -92,7 +92,7 @@ def FDTD_engine(plot=False):
 
         if plot:
             # Visualize fields
-            if (T % 20 == 0):
+            if (T % problem_instance.plot_update_interval == 0):
                 for rectangle in rectangles:
                     ax[0].add_patch(rectangle)
                 ax[0].plot(z, Ey)
