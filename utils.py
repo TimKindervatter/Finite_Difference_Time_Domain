@@ -12,7 +12,6 @@ def create_layer_shadings(device):
 
     rectangles = []
     normalized_refractive_indices = (layer_refractive_indices - np.min(layer_refractive_indices))/(np.max(layer_refractive_indices) - np.min(layer_refractive_indices))
-    # normalized_refractive_indices = layer_refractive_indices/np.max(layer_refractive_indices)
 
     for i, layer_size in enumerate(layer_sizes):
         layer_start_index, _ = device.compute_layer_start_and_end_indices(layer_sizes, i)

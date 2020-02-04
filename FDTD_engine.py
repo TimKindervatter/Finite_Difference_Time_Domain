@@ -117,8 +117,6 @@ def FDTD_engine(plot=False):
 
         if plot:
             utils.update_plot(T, z, Ey, Hx, problem_instance)
-            if debug:
-                utils.update_source_plot(problem_instance, T, t, Eysrc, Hxsrc)
             plt.pause(0.0001)
 
     fourier_transform_manager.finalize_fourier_transforms()
