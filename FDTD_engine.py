@@ -10,7 +10,7 @@ from numba import njit
 
 def FDTD_engine(plot=False):
     # Define problem
-    device_name = "AntiReflectionLayer"
+    device_name = "FreeSpace"
     problem_instance = config.ProblemInstance(device_name)
 
     max_frequency = problem_instance.max_frequency
@@ -27,9 +27,8 @@ def FDTD_engine(plot=False):
 
     source_location = 1
 
-    CW = False
-    pulse = True
-    debug = False
+    CW = True
+    pulse = False
 
     # Compute source parameters
     if CW:
@@ -60,9 +59,6 @@ def FDTD_engine(plot=False):
 
         Eysrc = g_E*np.ones(len(t))
         Hxsrc = g_H*np.ones(len(t))
-
-        E_envelope = np.exp(-((t - t0)/tau)**2)
-        H_envelope = -A*np.exp(-((t - t0 + deltat)/tau)**2)
 
         Eysrc[t < t0] *= np.exp(-((t[t < t0] - t0)/tau)**2)
         Hxsrc[t < t0] *= A*np.exp(-((t[t < t0] - t0 + deltat)/tau)**2)

@@ -118,6 +118,19 @@ class Device:
         return (layer_start_index, layer_end_index)
 
 
+class FreeSpace(Device):
+    def __init__(self, max_frequency):
+        device_width = 2
+
+        self.layer_widths = [device_width]  # Layer widths in meters
+        self.layer_permittivities = np.array([1.0])
+        self.layer_permeabilities = np.array([1.0])
+        
+        self.boundary_refractive_index = 1.0
+        
+        super().__init__(max_frequency)
+
+
 class Slab(Device):
     def __init__(self, max_frequency):
         

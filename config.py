@@ -20,7 +20,12 @@ class ProblemInstance:
     fourier_transform_manager = None
 
     def __init__(self, device_name):
-        if device_name == "Slab":
+        if device_name == "FreeSpace":
+            self.max_frequency = 1e9  # Hz
+            self.device = dv.FreeSpace(self.max_frequency)
+            self.num_frequencies = 100
+            self.plot_update_interval = 20
+        elif device_name == "Slab":
             self.max_frequency = 1e9  # Hz
             self.device = dv.Slab(self.max_frequency)
             self.num_frequencies = 100
@@ -35,6 +40,8 @@ class ProblemInstance:
             self.device = dv.BraggGrating(self.max_frequency)
             self.num_frequencies = 500
             self.plot_update_interval = 20
+        else:
+            raise Exception("Device not recognized.")
             
         # Initialize plot
         self.main_figure, self.main_axes = plt.subplots(nrows=2, ncols=1)
