@@ -26,10 +26,13 @@ def create_layer_shadings(device):
 
 def update_plot(T, z, Ey, Hx, problem_instance):
     fourier_transform_manager = problem_instance.fourier_transform_manager
-    ax = problem_instance.axes
+    ax = problem_instance.main_axes
 
     # Visualize fields
     if (T % problem_instance.plot_update_interval == 0):
+        ax[0].cla()
+        ax[1].cla()
+
         for rectangle in problem_instance.rectangles:
             ax[0].add_patch(rectangle)
         ax[0].plot(z, Ey)
@@ -55,7 +58,15 @@ def update_plot(T, z, Ey, Hx, problem_instance):
             ax[1].set_xlim([2e14, 4e14])
             ax[1].set_ylim([-40, 0])
             ax[1].legend()
-
-        plt.pause(1/60)
+        
+    
+def update_source_plot(problem_instance, T, t, Eysrc, Hxsrc):
+    ax = problem_instance.source_axes
+    if (T % problem_instance.plot_update_interval == 0):
         ax[0].cla()
         ax[1].cla()
+
+        ax[0].plot(t, Eysrc)
+        ax[0].plot(t[T], Eysrc[T], 'ro')
+        ax[1].plot(t, Hxsrc)
+        ax[1].plot(t[T], Hxsrc[T], 'ro')

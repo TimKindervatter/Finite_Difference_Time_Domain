@@ -10,8 +10,9 @@ c = 299792458  # Speed of light in m/s
 class ProblemInstance:
     device = None
     max_frequency = None
-    figure = None
-    axes = None
+    main_figure = None
+    main_axes = None
+    source_axes = None
     rectangles = None
     time_grid = None
     time_step = None
@@ -36,7 +37,8 @@ class ProblemInstance:
             self.plot_update_interval = 20
             
         # Initialize plot
-        self.figure, self.axes = plt.subplots(nrows=2, ncols=1)
+        self.main_figure, self.main_axes = plt.subplots(nrows=2, ncols=1)
+        self.main_figure, self.source_axes = plt.subplots(nrows=2, ncols=1)
         self.rectangles = utils.create_layer_shadings(self.device)
 
         self.time_step = self.compute_time_step()
