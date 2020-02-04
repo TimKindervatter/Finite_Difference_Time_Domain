@@ -5,7 +5,7 @@ from matplotlib.patches import Rectangle
 from config import c
 
 
-def create_layer_shadings(device):
+def create_layer_shadings(device, problem_instance):
     full_grid = device.grid
     layer_sizes = device.layer_sizes
     layer_refractive_indices = device.layer_refractive_indices
@@ -18,7 +18,7 @@ def create_layer_shadings(device):
             layer_start_index, _ = device.compute_layer_start_and_end_indices(layer_sizes, i)
 
             layer_color = str(1 - 0.6*normalized_refractive_indices[i])
-            rectangle = Rectangle((full_grid[layer_start_index], -1.5), layer_size, 3, facecolor=layer_color)
+            rectangle = Rectangle((full_grid[layer_start_index], problem_instance.ymin), layer_size, (problem_instance.ymax - problem_instance.ymin), facecolor=layer_color)
             rectangles.append(rectangle)
 
     return rectangles
@@ -38,26 +38,24 @@ def update_plot(T, z, Ey, Hx, problem_instance):
         ax[0].plot(z, Ey)
         ax[0].plot(z, Hx)
         ax[0].set_xlim([z[0], z[-1]])
-        ax[0].set_ylim([-1.5, 1.5])
+        ax[0].set_ylim([problem_instance.ymin, problem_instance.ymax])
 
-        # TODO: Make plotting style a problem_instance member
-        linear = True
-        log = False
-
-        if linear:
+        if problem_instance.axis_scaling == "linear":
             ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.reflectance, label='Reflectance')
             ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.transmittance, label='Transmittance')
             ax[1].plot(fourier_transform_manager.freq, fourier_transform_manager.conservation_of_energy, label='Conservation')
             ax[1].set_xlim([0, problem_instance.max_frequency])
             ax[1].set_ylim([0, 1.5])
             ax[1].legend()
-        if log:
+        elif problem_instance.axis_scaling == "logarithmic":
             ax[1].plot(fourier_transform_manager.freq, 10*np.log10(fourier_transform_manager.reflectance), label='Reflectance')
             ax[1].plot(fourier_transform_manager.freq, 10*np.log10(fourier_transform_manager.transmittance), label='Transmittance')
             ax[1].plot(fourier_transform_manager.freq, 10*(fourier_transform_manager.conservation_of_energy), label='Conservation')
             ax[1].set_xlim([2e14, 4e14])
             ax[1].set_ylim([-40, 0])
             ax[1].legend()
+
+        plt.pause(0.0001)
         
     
 def update_source_plot(problem_instance, T, t, Eysrc, Hxsrc):

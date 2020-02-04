@@ -25,30 +25,49 @@ class ProblemInstance:
             self.device = dv.FreeSpace(self.max_frequency)
             self.num_frequencies = 100
             self.plot_update_interval = 20
+            self.duration_multiplier = 1
+            self.axis_scaling = "linear"
+            self.ymin = -2
+            self.ymax = 2
         elif device_name == "Slab":
             self.max_frequency = 1e9  # Hz
             self.device = dv.Slab(self.max_frequency)
             self.num_frequencies = 100
             self.plot_update_interval = 20
+            self.duration_multiplier = 1
+            self.axis_scaling = "linear"
+            self.ymin = -2
+            self.ymax = 2
         elif device_name == "AntiReflectionLayer":
             self.max_frequency = 5e9  # Hz
             self.device = dv.AntiReflectionLayer(self.max_frequency)
             self.num_frequencies = 500
             self.plot_update_interval = 20
+            self.duration_multiplier = 1
+            self.axis_scaling = "linear"
+            self.ymin = -2
+            self.ymax = 2
         elif device_name == "BraggGrating":
             self.max_frequency = 1.5e15 # Hz
             self.device = dv.BraggGrating(self.max_frequency)
             self.num_frequencies = 500
             self.plot_update_interval = 20
+            self.duration_multiplier = 3
+            self.axis_scaling = "logarithmic"
+            self.ymin = -2
+            self.ymax = 2
         else:
             raise Exception("Device not recognized.")
             
         # Initialize plot
         self.main_figure, self.main_axes = plt.subplots(nrows=2, ncols=1)
-        self.rectangles = utils.create_layer_shadings(self.device)
+        self.rectangles = utils.create_layer_shadings(self.device, self)
 
         self.time_step = self.compute_time_step()
         self.fourier_transform_manager = fourier_transform.FourierTransform(self.num_frequencies, self.max_frequency, self.time_step)
+
+        self.source_type = "Pulse"
+        
 
     def compute_time_step(self):
         # Compute time step

@@ -10,7 +10,7 @@ from numba import njit
 
 def FDTD_engine(plot=False):
     # Define problem
-    device_name = "FreeSpace"
+    device_name = "Slab"
     problem_instance = config.ProblemInstance(device_name)
 
     max_frequency = problem_instance.max_frequency
@@ -27,14 +27,11 @@ def FDTD_engine(plot=False):
 
     source_location = 1
 
-    CW = True
-    pulse = False
-
     # Compute source parameters
-    if CW:
+    if problem_instance.source_type == "CW":
         tau = 3/max_frequency
         t0 = 3*tau
-    if pulse:
+    elif problem_instance.source_type == "Pulse":
         tau = 0.5/max_frequency
         t0 = 6*tau
 
@@ -42,8 +39,7 @@ def FDTD_engine(plot=False):
     max_index_of_refraction = np.max(n)
     t_prop = max_index_of_refraction*Nz*dz/c
 
-    # TODO: Make the coefficient out front a problem_instance member
-    total_runtime = 1*(12*tau + 5*t_prop)
+    total_runtime = problem_instance.duration_multiplier*(12*tau + 5*t_prop)
     steps = int(np.ceil(total_runtime/dt))
 
     # Compute source functions for Ey/Hx mode
@@ -51,8 +47,8 @@ def FDTD_engine(plot=False):
     A = np.sqrt(epsilon_r[source_location]/mu_r[source_location])
     deltat = n[source_location]*dz/(2*c) + dt/2
 
-    if CW:
-        f_op = 1e9
+    if problem_instance.source_type == "CW":
+        f_op = 1.5e9
 
         g_E = np.sin(2*np.pi*f_op*t) + np.finfo(float).eps
         g_H = -np.sin(2*np.pi*f_op*t) + np.finfo(float).eps
@@ -61,12 +57,9 @@ def FDTD_engine(plot=False):
         Hxsrc = g_H*np.ones(len(t))
 
         Eysrc[t < t0] *= np.exp(-((t[t < t0] - t0)/tau)**2)
-        Hxsrc[t < t0] *= A*np.exp(-((t[t < t0] - t0 + deltat)/tau)**2)
+        Hxsrc[t < t0 + deltat] *= A*np.exp(-((t[t < t0 + deltat] - t0 + deltat)/tau)**2)
 
-    elif pulse:
-        E_envelope = np.exp(-((t - t0)/tau)**2)
-        H_envelope = -A*np.exp(-((t - t0 + deltat)/tau)**2)
-
+    elif problem_instance.source_type == "Pulse":
         Eysrc = np.exp(-((t - t0)/tau)**2)
         Hxsrc = -A*np.exp(-((t - t0 + deltat)/tau)**2)
 
@@ -113,7 +106,6 @@ def FDTD_engine(plot=False):
 
         if plot:
             utils.update_plot(T, z, Ey, Hx, problem_instance)
-            plt.pause(0.0001)
 
     fourier_transform_manager.finalize_fourier_transforms()
 
